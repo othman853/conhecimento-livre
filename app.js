@@ -5,6 +5,8 @@ const application = require('./application')
 
 const MONGO_URL = 'mongodb://localhost:27017/conhecimento-livre-dev'
 
+const PORT = process.env.PORT || 3000
+
 // For didactical purposes
 const expandedMongoConnect = (url) => {
   return new Promise((resolve, reject) => {
@@ -28,8 +30,11 @@ const setupModels =
 const setupRoutes =
   (models) => routes.configure(models)
 
-const startApplication =
-  (routes) => application.configure(routes)
+const setupApplication =
+  (routes) => application.configure(routes, PORT)
+
+const start =
+   (application) => application.listen()
 
 const handleStartupFail =
   (error) => console.log('Application failed to start', error.message)
@@ -37,6 +42,7 @@ const handleStartupFail =
 mongoConnect(MONGO_URL)
   .then(setupModels)
   .then(setupRoutes)
-  .then(startApplication)
+  .then(setupApplication)
+  .then(start)
   .catch(handleStartupFail)
 
