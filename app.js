@@ -20,8 +20,7 @@ const expandedMongoConnect = (url) => {
 // This function is making the same thing as the one above, just with less lines...
 const mongoConnect =
   (url) => new Promise((resolve, reject) =>
-    MongoClient.connect(url,
-      (error, db) => error ? reject(error) : resolve(db)))
+    MongoClient.connect(url, (error, db) => error ? reject(error) : resolve(db)))
 
 const setupModels =
   (db) => models.configure(db)
