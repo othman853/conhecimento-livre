@@ -1,50 +1,43 @@
-const cool = require('cool-ascii-faces')
-const express = require('express')
-const path = require('path');
 const MongoClient = require('mongodb').MongoClient
-const assert = require('assert')
+const models = require('./models')
+const routes = require('./routes')
+const application = require('./application')
 
-const app = express()
 const MONGO_URL = 'mongodb://localhost:27017/conhecimento-livre-dev'
 
-app.set('MONGO_URL', (process.env.MONGO_URL || MONGO_URL))
-
-app.set('port', (process.env.PORT || 3000))
-
-app.get('/', (req, res) => {
-  res.sendFile(path.join(`${__dirname}/index.html`));
-})
-
-app.get('/video1', (req, res) => {
-  res.sendFile(path.join(`${__dirname}/video1.html`))
-})
-app.get('/video2', (req, res) => {
-  res.sendFile(path.join(`${__dirname}/video2.html`))
-})
-app.get('/video3', (req, res) => {
-  res.sendFile(path.join(`${__dirname}/video3.html`))
-})
-app.get('/video4', (req, res) => {
-  res.sendFile(path.join(`${__dirname}/video4.html`))
-})
-
-app.get('/cool', (request, response) => {
-  response.send(cool())
-})
-
-app.listen(app.get('port'), () => {
-  console.log(`Node app is running on port ${app.get('port')}`)
-})
-
-MongoClient.connect(app.get('MONGO_URL'), (err, db) => {
-  assert.equal(null, err)
-  console.log('Connected correctly to server.')
-  const pessoa = { nome: 'leco' }
-  app.get('/insert', (request, response) => {
-    db.collection('nomes').insertOne(pessoa, function (erro, result) {
-      console.log(result)
+// For didactical purposes
+const expandedMongoConnect = (url) => {
+  return new Promise((resolve, reject) => {
+    MongoClient.connect(url, (error, db) => {
+      if (error) {
+        return reject(error)
+      }
+      return resolve(db)
     })
-    response.send(pessoa)
-    db.close()
   })
-})
+}
+
+// This function is making the same thing as the one above, just with less lines...
+const mongoConnect =
+  (url) => new Promise((resolve, reject) =>
+    MongoClient.connect(url,
+      (error, db) => error ? reject(error) : resolve(db)))
+
+const setupModels =
+  (db) => models.configure(db)
+
+const setupRoutes =
+  (models) => routes.configure(models)
+
+const startApplication =
+  (routes) => application.configure(routes)
+
+const handleStartupFail =
+  (error) => console.log('Application failed to start', error.message)
+
+mongoConnect(MONGO_URL)
+  .then(setupModels)
+  .then(setupRoutes)
+  .then(startApplication)
+  .catch(handleStartupFail)
+
